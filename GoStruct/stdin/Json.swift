@@ -20,17 +20,19 @@ public struct Json {
         return try? JSONSerialization.jsonObject(with: data, options: [])
     }
     
-    static func convert(_ json:Any?,to model:String) -> String {
+    static func convert(_ json:Any?,to model:String,isArray:Bool = false) -> String {
         
         guard  let dict = json as? [String:Any] else {
             return "Please format your input as JSON."
         }
         
         var result = "\(model) struct { \n"
-        
+        if isArray {
+            result = "\(model) []struct { \n"
+        }
         
         dict.forEach { (key,value) in
-            //print(key)
+            print(key)
             //print(value)
             
             let variable = camelCase(key: key)
@@ -51,7 +53,7 @@ public struct Json {
             case let number as NSNumber:
                 //print(number.intValue,number)
                 //print(number.isEqual(to: number.int64Value))
-                print(number.objCType)
+               // print(number.objCType)
                 if (number.isEqual(to: number.int64Value)) {
                     result += "\(tabIndent)\(variable) int64 \(tag)"
                 }else if (number.isEqual(to: number.doubleValue)) {
@@ -67,6 +69,11 @@ public struct Json {
                 
             case let array as [Any]:
                 if let first = array.first {
+                    
+                    if variable == "Data" {
+                        print(type(of: first))
+                        print(key)
+                    }
                     
                     switch first {
                     case is NSNull:
@@ -85,8 +92,7 @@ public struct Json {
                         }
                     case let dict as [String:Any]:
                         count += 1
-                        result += "\(tabIndent) \(convert(dict, to: variable))  \(tag)"
-                        
+                        result += "\(tabIndent) \(convert(dict, to: variable,isArray: true))  \(tag)"
                     default:
                         break
                     }
